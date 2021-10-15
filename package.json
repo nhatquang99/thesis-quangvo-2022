@@ -1,0 +1,36 @@
+{
+  "name": "Thesis_QuangVo_2021",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon backend/server",
+    "client": "npm start --prefix dapp",
+    "dev": "concurrently \"npm run start\" \"npm run client\"",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy": "npx hardhat run scripts/deploy.js --network ropsten",
+    "compile": "npx hardhat compile"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.2",
+    "concurrently": "^6.2.2",
+    "ethers": "^5.0.0",
+    "hardhat": "^2.6.4"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.3.2",
+    "axios": "^0.21.4",
+    "contract": "file:./artifacts/contracts/House.sol/House.json",
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "express-async-handler": "^1.1.4",
+    "express-fileupload": "^1.2.1",
+    "form-data": "^4.0.0",
+    "multer": "^1.4.3",
+    "nodemon": "^2.0.13"
+  }
+}
