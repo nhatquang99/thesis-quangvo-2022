@@ -19,7 +19,7 @@ import { getJSONFromPinata } from "../actions/tokenActions";
 import { GET_JSON_FROM_PINATA_RESET } from "../constants/tokenConstant";
 
 const TokenDetailScreen = ({ match, history }) => {
-  const EMPTY_ADDRESS = '0x0000000000000000000000000000000000000000';
+  const EMPTY_ADDRESS = "0x0000000000000000000000000000000000000000";
 
   const dispatch = useDispatch();
   const tokenReducer = useSelector((state) => state.tokenReducer);
@@ -30,11 +30,14 @@ const TokenDetailScreen = ({ match, history }) => {
   const [errorMessage, setErrorMessage] = useState("");
   const [isOnSale, setIsOnSale] = useState(false);
   const [saleToken, setSaleToken] = useState(undefined);
+  const [saleTokens, setSaleTokens] = useState([]);
   const [minimumPrice, setMinimumPrice] = useState(0);
   const [offerPrice, setOfferPrice] = useState(0);
   const [offerList, setOfferList] = useState([]);
+  const [isHistorySectionVisible, setIsHistorySectionVisible] = useState(false);
+  const [isOffersSectionVisible, setIsOffersSectionVisible] = useState(false);
+  const [currentOffer, setCurrentOffer] = useState(null);
 
-  console.log('----', tokenContract)
 
   const initialize = async () => {
     dispatch({ type: GET_JSON_FROM_PINATA_RESET });
@@ -50,6 +53,19 @@ const TokenDetailScreen = ({ match, history }) => {
         const _isOnSale = await tokenContract.methods
           ._getOnSaleStatus(match.params.id)
           .call({ from: address[0] });
+        const _saleTokens = await tokenContract.methods
+          ._getSaleTokens()
+          .call({ from: address[0] });
+        if (_saleTokens.length != 0) {
+          const currentTokenTransactions = _saleTokens.filter(
+            (_currnetSaleToken) => _currnetSaleToken.tokenId == match.params.id
+          );
+
+          if (currentTokenTransactions.length != 0) {
+            setSaleTokens(currentTokenTransactions);
+          }
+        }
+
         setCurrentUser(address[0]);
         setIsOnSale(_isOnSale);
         setTokenOwner(_tokenOwner);
@@ -58,9 +74,15 @@ const TokenDetailScreen = ({ match, history }) => {
           const _saleToken = await tokenContract.methods
             ._getOnSaleToken(match.params.id)
             .call({ from: address[0] });
-          console.log("----------SALE TOKEN----------", _saleToken);
+
           if (_saleToken.offersCount > 0) {
             setOfferList(_saleToken.offers);
+            for (const offer of _saleToken.offers) {
+              if (offer.bidder == address[0]) {
+                setCurrentOffer(offer);
+                break;
+              }
+            }
           }
           setSaleToken(_saleToken);
         }
@@ -136,6 +158,7 @@ const TokenDetailScreen = ({ match, history }) => {
     }
   };
 
+  console.log("-------------", saleTokens);
   return (
     <>
       {errorMessage && <Message variant="danger">{errorMessage}</Message>}
@@ -207,10 +230,13 @@ const TokenDetailScreen = ({ match, history }) => {
                 {saleToken && (
                   <>
                     <ListGroup.Item>
-                      Status: {saleToken.isAvailable ? 'For Sale' : 'Sold'}
+                      Status: {saleToken.isAvailable ? "For Sale" : "Sold"}
                     </ListGroup.Item>
                     <ListGroup.Item>
-                      Buyer: {saleToken.soldTo == EMPTY_ADDRESS ? 'Unknown' : saleToken.soldTo}
+                      Buyer:{" "}
+                      {saleToken.soldTo == EMPTY_ADDRESS
+                        ? "Unknown"
+                        : saleToken.soldTo}
                     </ListGroup.Item>
                   </>
                 )}
@@ -239,8 +265,12 @@ const TokenDetailScreen = ({ match, history }) => {
                       </Row>
                     </ListGroup.Item>
                   </ListGroup>
-                  {currentUser != tokenOwner && (
-                    <Form onSubmit={offerToken} encType="multipart/form-data" style={{marginTop: 15}}>
+                  {currentUser != tokenOwner && currentOffer == null && (
+                    <Form
+                      onSubmit={offerToken}
+                      encType="multipart/form-data"
+                      style={{ marginTop: 15 }}
+                    >
                       <Form.Group controlId="offerPrice">
                         <Form.Label>Offer Price (ETH)</Form.Label>
                         <Form.Control
@@ -265,11 +295,28 @@ const TokenDetailScreen = ({ match, history }) => {
                       </Button>
                     </Form>
                   )}
+                  {currentUser != tokenOwner && currentOffer && (
+                    <ListGroup className="py-3">
+                      <ListGroup.Item>
+                        <Row>
+                          <Col>Your Offer: </Col>
+                          <Col>
+                            {web3.utils.fromWei(
+                              currentOffer.offerPrice,
+                              "ether"
+                            )}{" "}
+                            (ETH)
+                          </Col>
+                        </Row>
+                      </ListGroup.Item>{" "}
+                    </ListGroup>
+                  )}
                 </>
               )}
 
               {!isOnSale && currentUser == tokenOwner && (
                 <Form onSubmit={putOnSale} encType="multipart/form-data">
+                  <Message variant='warning'>Please be aware that you only receive 90% value of your offer.</Message>
                   <Form.Group controlId="address">
                     <Form.Label>Minimum Price (ETH)</Form.Label>
                     <Form.Control
@@ -290,44 +337,120 @@ const TokenDetailScreen = ({ match, history }) => {
           <Row>
             {saleToken && saleToken.offersCount > 0 && (
               <Col md={12}>
-                <h2>Offers</h2>
-                <Table>
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>From</th>
-                      <th>Offer Price (ETH)</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {offerList.map((offer, index) => {
-                      return (
-                        <>
-                          <tr key={index}>
-                            <td>{index + 1}</td>
-                            <td>{offer.bidder}</td>
-                            <td>
-                              {web3.utils.fromWei(offer.offerPrice, "ether")}
-                            </td>
-                            {currentUser == tokenOwner && (
-                              <td style={{ paddingTop: 16 }}>
-                                <Button
-                                  onClick={(e) => acceptOffer(e, index)}
-                                  variant="outline-success"
-                                  size="sm"
-                                >
-                                  Accept
-                                </Button>
+                <Button
+                  onClick={() => {
+                    setIsOffersSectionVisible(!isOffersSectionVisible);
+                  }}
+                  variant="light"
+                >
+                  <h2>
+                    <i
+                      className={`fas fa-chevron-${
+                        isOffersSectionVisible ? "down" : "right"
+                      }`}
+                      style={{ marginRight: 15 }}
+                    ></i>
+                    Offers
+                  </h2>
+                </Button>
+                {isOffersSectionVisible && (
+                  <Table>
+                    <thead>
+                      <tr>
+                        <th>From</th>
+                        <th>Offer Price (ETH)</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {offerList.map((offer, index) => {
+                        return (
+                          <>
+                            <tr key={index}>
+                              <td>{offer.bidder}</td>
+                              <td>
+                                {web3.utils.fromWei(offer.offerPrice, "ether")}
                               </td>
-                            )}
-                          </tr>
-                        </>
-                      );
-                    })}
-                  </tbody>
-                </Table>
+                              {currentUser == tokenOwner && (
+                                <td style={{ paddingTop: 16 }}>
+                                  <Button
+                                    onClick={(e) => acceptOffer(e, index)}
+                                    variant="outline-success"
+                                    size="sm"
+                                  >
+                                    Accept
+                                  </Button>
+                                </td>
+                              )}
+                            </tr>
+                          </>
+                        );
+                      })}
+                    </tbody>
+                  </Table>
+                )}
               </Col>
+            )}
+          </Row>
+          <Row>
+            {saleTokens.length != 0 ? (
+              <Col md={12}>
+                <Button
+                  onClick={() => {
+                    setIsHistorySectionVisible(!isHistorySectionVisible);
+                  }}
+                  variant="light"
+                >
+                  <h2>
+                    <i
+                      className={`fas fa-chevron-${
+                        isHistorySectionVisible ? "down" : "right"
+                      }`}
+                      style={{ marginRight: 15 }}
+                    ></i>
+                    History
+                  </h2>
+                </Button>
+                {isHistorySectionVisible && (
+                  <Table>
+                    <thead>
+                      <tr>
+                        <th>Owner</th>
+                        <th>Minimum Price</th>
+                        <th>Buyer</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {saleTokens.map((saleToken, index) => {
+                        return (
+                          <>
+                            <tr key={index}>
+                              <td>{saleToken.postedBy}</td>
+                              <td>
+                                {web3.utils.fromWei(
+                                  saleToken.minimumPrice,
+                                  "ether"
+                                )}
+                              </td>
+                              <td>
+                                {saleToken.soldTo == EMPTY_ADDRESS
+                                  ? "Unknown"
+                                  : saleToken.soldTo}
+                              </td>
+                              <td>
+                                {saleToken.isAvailable ? "For Sale" : "Sold"}
+                              </td>
+                            </tr>
+                          </>
+                        );
+                      })}
+                    </tbody>
+                  </Table>
+                )}
+              </Col>
+            ) : (
+              <Message variant="warning">No transactions history</Message>
             )}
           </Row>
         </>

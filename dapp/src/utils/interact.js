@@ -3,7 +3,6 @@ import contract from "../../../artifacts/contracts/House.sol/House.json";
 const alchemyKey = process.env.REACT_APP_API_URL;
 const contractAddress = process.env.REACT_APP_DEPLOYED_CONTRACT;
 export const web3 = createAlchemyWeb3(alchemyKey);
-
 export const tokenContract = new web3.eth.Contract(contract.abi, contractAddress);
 
 export const connectWallet = async () => {
@@ -13,14 +12,14 @@ export const connectWallet = async () => {
         method: "eth_requestAccounts",
       });
       const obj = {
-        status: "👆🏽 Write a message in the text-field above.",
+        status: "",
         address: addressArray[0],
       };
       return obj;
     } catch (err) {
       return {
         address: "",
-        status: "😥 " + err.message,
+        status: err.message,
       };
     }
   } else {
@@ -30,7 +29,3 @@ export const connectWallet = async () => {
     };
   }
 };
-
-export const disconnectWallet = async () => {
-  await web3.clearCachedProvider()
-}

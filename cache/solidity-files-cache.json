@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "D:\\Thesis\\Ethereum\\Thesis_QuangVo_2021\\contracts\\House.sol": {
-      "lastModificationDate": 1633856496751,
-      "contentHash": "edff5fb23396f81951479131cf8f27b4",
+      "lastModificationDate": 1634638130341,
+      "contentHash": "510925f00edd4835f7b9f63a89ea0f66",
       "sourceName": "contracts/House.sol",
       "solcConfig": {
         "version": "0.8.0",

@@ -7,7 +7,7 @@ import AboutScreen from './screens/AboutScreen';
 import HomeScreen from './screens/HomeScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import TokenDetailScreen from './screens/TokenDetail';
-import TokenMintScreen from './screens/mint/TokenMintScreen';
+import TokenMintScreen from './screens/TokenMintScreen';
 import MyTokenScreen from './screens/MyTokenScreen';
 import HistoryScreen from './screens/HistoryScreen';
 import SaleTokenScreen from './screens/SaleTokenScreen';

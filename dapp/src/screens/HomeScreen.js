@@ -16,33 +16,34 @@ const HomeScreen = ({ match }) => {
   const [loading, setLoading] = useState(true);
 
   const intialize = async () => {
-    const address = await web3.eth.getAccounts();
-    if (address[0]) {
-      const _saleTokens = await tokenContract.methods
-        ._getSaleTokens()
-        .call({ from: address[0] });
-      if (_saleTokens.length == 0)
-      {
-        setErrorMessage("There is no token on the market.");
-        setLoading(false);
-      }
-      else 
-      {
-        const isAvailableOnSaleTokens = _saleTokens.filter(_saleToken => _saleToken.isAvailable == true);
-        if (isAvailableOnSaleTokens.length == 0) 
-        {
+    try {
+      const address = await web3.eth.getAccounts();
+      if (address[0]) {
+        const _saleTokens = await tokenContract.methods
+          ._getSaleTokens()
+          .call({ from: address[0] });
+
+        if (_saleTokens.length == 0) {
           setErrorMessage("There is no token on the market.");
           setLoading(false);
+        } else {
+          const isAvailableOnSaleTokens = _saleTokens.filter(
+            (_saleToken) => _saleToken.isAvailable == true
+          );
+          if (isAvailableOnSaleTokens.length == 0) {
+            setErrorMessage("There is no token on the market.");
+            setLoading(false);
+          } else {
+            setSaleTokens(isAvailableOnSaleTokens);
+            setLoading(false);
+          }
         }
-        else
-        {
-          setSaleTokens(isAvailableOnSaleTokens);
-          setLoading(false);
-        }
+      } else {
+        setErrorMessage("Please sign in your account.");
+        setLoading(false);
       }
-    } else {
-      setErrorMessage("Please sign in your account.");
-      setLoading(false);
+    } catch (error) {
+      console.log("----------------------", error.message);
     }
   };
 

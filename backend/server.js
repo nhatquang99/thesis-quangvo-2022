@@ -57,7 +57,7 @@ app.post(
       fs.unlinkSync(req.files[0].path);
       res.status(200).json(response.data);
     } catch (error) {
-      console.log("------------ERROR---------", error.message);
+      console.log(error.message);
     }
   }
 );

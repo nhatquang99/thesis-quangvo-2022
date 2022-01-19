@@ -1,22 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button, Form } from "react-bootstrap";
-import FormContainer from "../../components/FormContainer";
-import CheckoutSteps from "../../components/CheckoutSteps";
-import axios from "axios";
+import FormContainer from "../components/FormContainer";
+import CheckoutSteps from "../components/CheckoutSteps";
 import FormData from "form-data";
-import fs from "fs";
-import Loader from "../../components/Loader";
-import Message from "../../components/Message";
+import Loader from "../components/Loader";
+import Message from "../components/Message";
 import IPFS from "ipfs-api";
-import { pinFiletoPinata, pinJSONToPinata } from "../../actions/tokenActions";
+import { pinFiletoPinata, pinJSONToPinata } from "../actions/tokenActions";
 import { useSelector, useDispatch } from "react-redux";
 import {
   PIN_FILE_TO_PINATA_RESET,
   TOKEN_REDUCER_LOADING_FALSE,
   TOKEN_REDUCER_LOADING_TRUE,
-} from "../../constants/tokenConstant";
-import { tokenContract, web3 } from "../../utils/interact";
+} from "../constants/tokenConstant";
+import { tokenContract, web3 } from "../utils/interact";
 
 const TokenMintScreen = ({ match, history }) => {
   const ipfs = new IPFS({
@@ -34,6 +32,8 @@ const TokenMintScreen = ({ match, history }) => {
   const [restroom, setRestroom] = useState(0);
   const [type, setType] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [ownerAddress, setOwnerAddress] = useState("");
 
   const tokenReducer = useSelector((state) => state.tokenReducer);
   const globalReducer = useSelector((state) => state.globalReducer);
@@ -83,25 +83,28 @@ const TokenMintScreen = ({ match, history }) => {
 
   const mintHandler = async (e) => {
     e.preventDefault();
-    dispatch({ type: TOKEN_REDUCER_LOADING_TRUE });
-    const address = await web3.eth.getAccounts();
+    const isAddress = web3.utils.isAddress(ownerAddress);
+    if (!isAddress) {
+      setErrorMessage("Address does not exists");
+    } else {
+      setErrorMessage("");
+      dispatch({ type: TOKEN_REDUCER_LOADING_TRUE });
+      const address = await web3.eth.getAccounts();
 
-    try {
-      const signature = await web3.eth.personal.sign(tokenHash, address[0]);
-      console.log('signature signed', signature);
-      // const response = await tokenContract.methods
-      // .mint(address[0], tokenHash)
-      // .send({ from: address[0] });
+      try {
+        const response = await tokenContract.methods
+          .mint(ownerAddress, tokenHash)
+          .send({ from: address[0] });
 
-      // if (response.status == true) 
-      // {
-      //   setCurrentStep(4);
-      // }
-    } catch (error) {
-      setErrorMessage(error.message)
+        if (response.status == true) {
+          setCurrentStep(4);
+        }
+      } catch (error) {
+        setErrorMessage(error.message);
+      }
+
+      dispatch({ type: TOKEN_REDUCER_LOADING_FALSE });
     }
-
-    dispatch({ type: TOKEN_REDUCER_LOADING_FALSE });
   };
 
   const uploadFileToPinata = async (e, id) => {
@@ -110,6 +113,23 @@ const TokenMintScreen = ({ match, history }) => {
 
     dispatch(pinFiletoPinata(formData, id));
   };
+
+  const initialize = async () => {
+    const address = await web3.eth.getAccounts();
+    const contractOwner = await tokenContract.methods
+      .owner()
+      .call({ from: address[0] });
+
+    if (address[0] != contractOwner) {
+      setErrorMessage("You do not have rights to use this feature.");
+    } else {
+      setIsAuthorized(true);
+    }
+  };
+
+  useEffect(() => {
+    initialize();
+  }, []);
 
   useEffect(() => {
     if (tokenHash) {
@@ -123,13 +143,11 @@ const TokenMintScreen = ({ match, history }) => {
         Go Back
       </Link>
       <FormContainer>
-        {errorMessage && (
-          <Message variant='danger'>{errorMessage}</Message>
-        )}
-        <h1 className="text-center">Create Your Own Token</h1>
+        {errorMessage && <Message variant="danger">{errorMessage}</Message>}
+        {isAuthorized && <h2 className="text-center">Create Your Own Token</h2>}
       </FormContainer>
 
-      {currentStep == 1 && (
+      {isAuthorized && currentStep == 1 && (
         <>
           <CheckoutSteps step1 />
           <div style={{ textAlign: "center" }}>{loading && <Loader />}</div>
@@ -194,7 +212,7 @@ const TokenMintScreen = ({ match, history }) => {
         </>
       )}
 
-      {currentStep == 2 && (
+      {isAuthorized && currentStep == 2 && (
         <>
           <CheckoutSteps step1 step2 />
           <div style={{ textAlign: "center" }}>{loading && <Loader />}</div>
@@ -269,7 +287,7 @@ const TokenMintScreen = ({ match, history }) => {
         </>
       )}
 
-      {currentStep == 3 && (
+      {isAuthorized && currentStep == 3 && (
         <>
           <CheckoutSteps step1 step2 step3 />
           <div style={{ textAlign: "center" }}>{loading && <Loader />}</div>
@@ -284,6 +302,16 @@ const TokenMintScreen = ({ match, history }) => {
                 ></Form.Control>
               </Form.Group>
 
+              <Form.Group controlId="owner">
+                <Form.Label>Owner Address</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Enter Owner Address"
+                  value={ownerAddress}
+                  onChange={(e) => setOwnerAddress(e.target.value)}
+                ></Form.Control>
+              </Form.Group>
+
               <Button variant="primary" type="submit">
                 Mint
               </Button>
@@ -292,7 +320,7 @@ const TokenMintScreen = ({ match, history }) => {
         </>
       )}
 
-      {currentStep == 4 && (
+      {isAuthorized && currentStep == 4 && (
         <>
           <CheckoutSteps step1 step2 step3 step4 />
           <FormContainer>

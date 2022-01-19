@@ -3,25 +3,36 @@ import { Link } from "react-router-dom";
 import { Button, Col, Container, Form, Row } from "react-bootstrap";
 import FormContainer from "../components/FormContainer";
 
-
 const AboutScreen = ({ match, history }) => {
-
   return (
     <>
-        <Container>
-            <Row className="text-center">
-                <Col>
-                    <h1>About Us</h1>
-                </Col>
-            </Row>
-            <Row className="text-justify justify-content-md-center">
-                <Col>
-                        <p>In CryptoKitties, users collect and breed oh-so-adorable creatures that we call CryptoKitties! Each kitty has a unique genome that defines its appearance and traits. Players can breed their kitties to create new furry friends and unlock rare cattributes.</p>
-                        <p>CryptoKitties is one of the world’s first blockchain games. ‘Blockchain’ is the technology that makes things like Bitcoin possible. While CryptoKitties isn’t a digital currency, it does offer the same security: each CryptoKitty is one-of-a-kind and 100% owned by you. It cannot be replicated, taken away, or destroyed.</p>
-                </Col>
-            </Row>
-
-        </Container>
+      <Container>
+        <Row className="text-center">
+          <Col>
+            <h1>About Us</h1>
+          </Col>
+        </Row>
+        <Row className="text-justify justify-content-md-center">
+          <Col>
+            <p>
+              Premium House is a real estate document storage system as well as
+              a trading platform that helps people buy and sell real estate
+              easily that licensed by the government.
+            </p>
+            <p>
+              Premium House is one of the first real estate storage systems
+              applying Blockchain technology in the world. With the intervention
+              of Blockchain, all information about ownership as well as buying
+              and selling history for a certain asset is transparent and public.
+              Premium House's mission is to create an
+              ecosystem to help people feel secure when trading properties as
+              well as improve the buying and selling process to the maximum to
+              help cut fee and paperwork procedure compared to the
+              traditional process.
+            </p>
+          </Col>
+        </Row>
+      </Container>
     </>
   );
 };

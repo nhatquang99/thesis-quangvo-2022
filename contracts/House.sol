@@ -5,6 +5,7 @@ import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
+
 contract House is ERC721, Ownable {
     
     using Counters for Counters.Counter;
@@ -20,6 +21,9 @@ contract House is ERC721, Ownable {
     
     //Hash -> hash existed or not
     mapping(string => bool) private _hashes;
+    
+    //TokenId -> Original Owner
+    mapping(uint => address) private _primeOwners;
 
     //TokenId -> on-sale or off-sale
     mapping(uint256 => bool) private _isOnSale;
@@ -97,7 +101,7 @@ contract House is ERC721, Ownable {
 
     //PUBLIC
     //Mint a new token
-    function mint(address _to, string memory _hash) public returns (uint256)
+    function mint(address _to, string memory _hash) public onlyOwner returns (uint256)
     {
         require(_hashes[_hash] != true, "Your token already exists");
         _hashes[_hash] = true;
@@ -109,6 +113,8 @@ contract House is ERC721, Ownable {
         _setTokenURI(newItemId, _hash);
         
         _myTokens[_to].push(newItemId);
+        
+        _primeOwners[newItemId] = _to;
         
         totalTokens += 1;
 
@@ -127,6 +133,8 @@ contract House is ERC721, Ownable {
        delete _tokenURIs[tokenId];
        
        removeMyToken(msg.sender, tokenId);
+       
+       delete _primeOwners[tokenId];
        
        totalTokens -= 1;
 
@@ -199,6 +207,7 @@ contract House is ERC721, Ownable {
         
         Offer[] storage currentOffers = currentSaleToken.offers;
         
+        address primeOwner = _primeOwners[tokenId];
       
         
         for (uint i = 0; i < currentOffers.length; i++)
@@ -209,7 +218,8 @@ contract House is ERC721, Ownable {
             
             if (i == offerIndex)
             {
-                payable(ownerOf(tokenId)).transfer(currentOffer.offerPrice);
+                payable(primeOwner).transfer(currentOffer.offerPrice * 5 / 100);
+                payable(ownerOf(tokenId)).transfer(currentOffer.offerPrice * 9 / 10);
                 _myTokens[currentOffer.bidder].push(tokenId);
                 safeTransferFrom(ownerOf(tokenId), currentOffer.bidder, tokenId);
                 currentSaleToken.soldTo = currentOffer.bidder;
@@ -269,51 +279,51 @@ contract House is ERC721, Ownable {
     
     //BUYER
     //Revoke offer from an on-sale token
-    function revokeOffer (uint256 tokenId) public restrictOnMarket(tokenId) payable
-    {
-        require(_hasOffer[tokenId][msg.sender] != false, "You have not offered for this token");
+    // function revokeOffer (uint256 tokenId) public restrictOnMarket(tokenId) payable
+    // {
+    //     require(_hasOffer[tokenId][msg.sender] != false, "You have not offered for this token");
         
-        uint tokenIndex = _onSaleIndex[tokenId];
+    //     uint tokenIndex = _onSaleIndex[tokenId];
         
-        SaleToken storage currentSaleToken = saleTokens[tokenIndex];
+    //     SaleToken storage currentSaleToken = saleTokens[tokenIndex];
         
-        require(currentSaleToken.isAvailable != false, "Token is not for sale in this auction");
-        require(currentSaleToken.offersCount != 0, "Your token has not been offered yet");
+    //     require(currentSaleToken.isAvailable != false, "Token is not for sale in this auction");
+    //     require(currentSaleToken.offersCount != 0, "Your token has not been offered yet");
         
-        Offer[] storage currentOffers = currentSaleToken.offers;
+    //     Offer[] storage currentOffers = currentSaleToken.offers;
     
-        bool isIndexNotFound = true;
+    //     bool isIndexNotFound = true;
         
-        uint currentIndex = 0;
+    //     uint currentIndex = 0;
         
-        while (isIndexNotFound) 
-        {
-            if (currentOffers[currentIndex].bidder != msg.sender) 
-            {
-                currentIndex += 1;
-            }
-            else 
-            {
-               isIndexNotFound = false;
-            }
-        }
+    //     while (isIndexNotFound) 
+    //     {
+    //         if (currentOffers[currentIndex].bidder != msg.sender) 
+    //         {
+    //             currentIndex += 1;
+    //         }
+    //         else 
+    //         {
+    //           isIndexNotFound = false;
+    //         }
+    //     }
         
-        balances[msg.sender] -= currentOffers[currentIndex].offerPrice;
-        payable(msg.sender).transfer(currentOffers[currentIndex].offerPrice);
-        _hasOffer[tokenId][msg.sender] = false;
+    //     balances[msg.sender] -= currentOffers[currentIndex].offerPrice;
+    //     payable(msg.sender).transfer(currentOffers[currentIndex].offerPrice);
+    //     _hasOffer[tokenId][msg.sender] = false;
         
-        for (uint i = currentIndex; i < currentOffers.length - 1; i++) 
-        {
-            currentOffers[i] = currentOffers[i+1];
-        }
+    //     for (uint i = currentIndex; i < currentOffers.length - 1; i++) 
+    //     {
+    //         currentOffers[i] = currentOffers[i+1];
+    //     }
         
-        delete currentOffers[currentOffers.length-1];
+    //     delete currentOffers[currentOffers.length-1];
         
-        currentOffers.pop();
+    //     currentOffers.pop();
         
-        currentSaleToken.offersCount -= 1;
+    //     currentSaleToken.offersCount -= 1;
         
-    }
+    // }
     
     //OWNER
     //Revoke token off market
