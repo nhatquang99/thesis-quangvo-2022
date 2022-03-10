@@ -43,15 +43,13 @@ const HomeScreen = ({ match }) => {
         setLoading(false);
       }
     } catch (error) {
-      console.log("----------------------", error.message);
+      console.log(error.message);
     }
   };
 
   useEffect(() => {
     intialize();
   }, []);
-
-  console.log("----------", saleTokens);
 
   return (
     <>

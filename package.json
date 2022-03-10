@@ -23,7 +23,6 @@
   "dependencies": {
     "@openzeppelin/contracts": "^4.3.2",
     "axios": "^0.21.4",
-    "contract": "file:./artifacts/contracts/House.sol/House.json",
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",

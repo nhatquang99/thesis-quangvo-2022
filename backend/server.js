@@ -15,7 +15,7 @@ app.options("*", cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-const imageUploadPath = "D:/Thesis/Ethereum/Thesis_QuangVo_2021/upload-images";
+const imageUploadPath = "./";
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -41,7 +41,7 @@ app.post(
     let fd = new FormData();
     fd.append(
       "file",
-      fs.createReadStream(`./upload-images/${req.files[0].filename}`)
+      fs.createReadStream(`./${req.files[0].filename}`)
     );
 
     try {
@@ -88,6 +88,6 @@ app.get('/api/getJsonFromIPFS/:hash', async (req, res) => {
     res.status(200).json(JSON.parse(Object.keys(response.data)[0]));
 })
 
-const PORT = 5000;
+const PORT = 10000;
 
 app.listen(PORT, console.log(`Connected in development to port ${PORT}`));

@@ -158,7 +158,7 @@ const TokenDetailScreen = ({ match, history }) => {
     }
   };
 
-  console.log("-------------", saleTokens);
+  console.log("------token-------", saleTokens);
   return (
     <>
       {errorMessage && <Message variant="danger">{errorMessage}</Message>}
