@@ -28,9 +28,9 @@ const storage = multer.diskStorage({
 
 const imageUpload = multer({ storage: storage });
 
-const PINATA_API_KEY = "979185e89478d3eae88e";
+const PINATA_API_KEY = "54a549f6a61daf973e52";
 const PINATA_SECRET_KEY =
-  "bdc82d52975a0370bbfc4ff5710f7261775feba4486c1d359a5493fa9d1cc183";
+  "ede6cdf66c55e13687516b8e69f6829da5110385215cc2dac882c5ae771d33b4";
 
 app.post(
   "/api/pinFileToIPFS",
@@ -88,6 +88,6 @@ app.get('/api/getJsonFromIPFS/:hash', async (req, res) => {
     res.status(200).json(JSON.parse(Object.keys(response.data)[0]));
 })
 
-const PORT = 10000;
+const PORT = 4500;
 
 app.listen(PORT, console.log(`Connected in development to port ${PORT}`));

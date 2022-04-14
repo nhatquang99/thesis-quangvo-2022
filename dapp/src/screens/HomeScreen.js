@@ -23,6 +23,8 @@ const HomeScreen = ({ match }) => {
           ._getSaleTokens()
           .call({ from: address[0] });
 
+        console.log('sale', _saleTokens)
+
         if (_saleTokens.length == 0) {
           setErrorMessage("There is no token on the market.");
           setLoading(false);
